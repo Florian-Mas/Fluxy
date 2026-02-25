@@ -1,0 +1,179 @@
+Tous les éléments liés à MongoDB correspondent aux serveurs, channels et messages rémanents. Les rôles, les permissions et les codes d'invitation sont liés à cette base de données.
+
+Les setters permettent d'ajouter des éléments dans la base de données ou de remplacer une ligne dans un des objets de la base.
+Les updates permettent de modifier les données de la base partiellement, on peut considérer cela comme des changements souples qui n'impliquent pas de grandes conséquences.
+Les getters permettent de récupérer des informations ou de vérifier des informations dans la base de données
+Les deletes permettent de supprimer une information ou un objet de la base de données.
+
+Toutes les fonctions utilisées prennent en premier paramètre la connexion avec le client et en second paramètre le nom de la base de données.
+
+La connexion à la base de données est gérée par le fichier db_mongo_connection et doit être générée dans une variable qui sera appelée par les autres fonctions.
+
+db_mongo_setter.rs :
+    -set_server :
+        utilisateur qui le crée
+        nom du serveur
+    permet de créer un serveur dont l'id s'incrémente à chaque fois. pour ajouter d'autres éléments pour l'objet, les ajouter dans insert_one.  
+
+    - set_channel :  
+        serveur id  
+        nom du channel  
+        utilisateur qui le crée  
+    permet de créer un channel dans le serveur que si l'utilisateur a la permission (administrateur ou possesseur).
+
+    - set_message :  
+        serveur id  
+        channel id  
+        message  
+        utilisateur qui écrit  
+    permet d'écrire dans le channel du serveur correspondant. une vérification est effectuée pour vérifier que le membre et le salon existent bien dans le serveur
+
+    - add_member_to_server :  
+        serveur id  
+        membre id  
+    permet de forcer un membre à rejoindre un serveur. pas de lien d'invitation ni de confirmation de l'utilisateur pour rejoindre
+
+    - add_admin_to_server :  
+        serveur id  
+        possesseur id  
+        membre à passer administrateur  
+    permet uniquement au possesseur du serveur d'ajouter un administrateur
+
+    - switch_owner :  
+        serveur id  
+        possesseur id  
+        membre à passer possesseur  
+    permet uniquement au possesseur du serveur de passer un autre membre possesseur du serveur à sa place  
+
+    - create_link_one_use :  
+        serveur id  
+        utilisateur qui veut créer le lien  
+    permet de créer un lien que si l'on est administrateur ou possesseur du serveur. le terme one_use ne s'effectue que sur la ligne commentée dans join_by_link est décommentée. la gestion de l'aléatoire du code est effectuée grâce à random_string
+
+    - join_by_link :  
+        lien/code  
+        utilisateur qui veut rejoindre  
+    permet de rejoindre le serveur grâce à un lien.
+
+db_mongo_update.rs :
+    - update_message
+        message id
+        message
+        utilisateur qui a écrit le message
+    permet à l'utilisateur ayant écrit son message de le modifier
+
+    - update_channel_name  
+        channel id  
+        nom  
+        administrateur/possesseur du serveur  
+    permet à un administrateur ou au possesseur de modifier le nom du channel  
+
+    - update_server_name  
+        serveur id  
+        nom  
+        administrateur/possesseur du serveur  
+    permet au possesseur de modifier le nom du serveur
+
+db_mongo_getter.rs :
+    - get_collection :
+        nom de la collection    
+    permet de récupérer l'ensemble de la collection associée pour avoir des statistiques ou des vérifications
+
+    - get_server :  
+        serveur id  
+    permet de récupérer les données initiées par set_server  
+
+    - get_channel_by_id :  
+        channel id  
+    permet de récupérer les données initiées par set_channel  
+
+    - get_message_by_id :  
+        message id  
+    permet de récupérer les données initiées par set_message  
+
+    - get_servers_by_member :  
+        id de l'utilisateur  
+    permet de récupérer l'ensemble des serveurs où l'utilisateur est.
+
+    - get_channels_of_server :  
+        serveur id  
+    permet de récupérer l'ensemble des channels d'un serveur
+
+    - get_messages_of_channel :  
+        channel id  
+    permet de récupérer l'ensemble des messages d'un channel
+
+    - get_server_id_by_message_id :  
+        message id  
+    permet de récupérer l'id du serveur où se trouve le message
+
+    - get_last_id :  
+        collection  
+    permet de récupérer le dernier id de la collection. utile pour incrémenter les identifiants
+
+    - is_owner :  
+        serveur id  
+        id de l'utilisateur  
+    permet de vérifier s'il possède le serveur
+
+    - is_admin :  
+        serveur id  
+        id de l'utilisateur  
+    permet de vérifier s'il possède le rôle administrateur sur le serveur  
+
+    - is_member :  
+        serveur id  
+        id de l'utilisateur  
+    permet de vérifier s'il est sur le serveur
+
+    - is_channel_of_server :  
+        serveur id  
+        channel id  
+    permet de vérifier si le channel existe sur le serveur. utile dans le setter du message pour ajouter une protection supplémentaire pour écrire un message
+
+    - vec_doc_to_number :  
+        vecteur document  
+    permet de transformer un vecteur document obtenu auparavant pour avoir un nombre. attention il faut qu'il y ait qu'un seul nombre unique
+
+    - verify_link_exist :  
+        lien/code  
+    permet de vérifier si le code est bien généré/empêche la génération de deux codes identiques
+
+    - convert_string_to_utc :  
+        chaîne de caractères  
+    permet de convertir une chaîne de caractères en format UTC en UTC
+
+    - convert_utc_to_paris_time  
+        utc temps  
+    permet de convertir un UTC en heure de Paris sous format chaîne de caractères
+
+db_mongo_delete.rs :
+    - delete_message :
+        message id
+        utilisateur qui fait l'action   
+    permet au créateur du message, un administrateur ou un possesseur de supprimer le message correspondant
+
+    - delete_channel :  
+        channel id  
+        id utilisateur  
+    permet à un administrateur ou un possesseur de supprimer un channel
+
+    - delete_server :  
+        serveur id  
+        id utilisateur  
+    permet au possesseur du serveur de le supprimer
+
+    - delete_admin :  
+        serveur id  
+        id possesseur  
+        id administrateur  
+    permet à un possesseur de serveur de retirer la permission administrateur à un des membres
+
+    - delete_member :  
+        utilisateur id  
+        utilisateur à supprimer  
+    permet à un membre de partir, à un administrateur de partir et de supprimer des membres et à un possesseur de supprimer des membres. un possesseur ne peut pas partir.
+
+    - delete_link :  
+        lien/code  
+    permet de supprimer un lien d'invitation directement
